@@ -54,5 +54,97 @@ GROUP BY CustomerID
 ORDER BY total_spent DESC
 LIMIT 10;
 
+WITH country_revenue AS (
+    SELECT 
+        Country,
+        SUM(Quantity * UnitPrice) AS revenue
+    FROM cleaned_ecommerse_sales
+    WHERE Quantity > 0 AND UnitPrice > 0
+    GROUP BY Country
+)
+SELECT 
+    Country,
+    revenue,
+    ROUND(
+        revenue / SUM(revenue) OVER () * 100, 2
+    ) AS revenue_percentage
+FROM country_revenue
+ORDER BY revenue DESC;
 
+#REVENUE CONTRIBUTION % BY COUNTRY
+WITH country_revenue AS (
+    SELECT Country,
+    SUM(Quantity * UnitPrice) AS revenue
+    FROM cleaned_ecommerse_sales
+    WHERE Quantity > 0 AND UnitPrice > 0
+    GROUP BY Country
+)
+SELECT 
+Country,
+revenue,
+ROUND(
+    revenue / SUM(revenue) OVER () * 100, 2
+    ) AS revenue_percentage
+FROM country_revenue
+ORDER BY revenue DESC;
 
+#RANKING PRODUCTS WITHIN EACH COUNTRY
+WITH product_revenue AS (
+    SELECT 
+        Country,
+        Description,
+        SUM(Quantity * UnitPrice) AS revenue
+    FROM cleaned_ecommerse_sales
+    WHERE Quantity > 0 AND UnitPrice > 0
+    GROUP BY Country, Description
+)
+SELECT *
+FROM (
+    SELECT 
+        Country,
+        Description,
+        revenue,
+        RANK() OVER (PARTITION BY Country ORDER BY revenue DESC) AS rank_in_country
+    FROM product_revenue
+) ranked
+WHERE rank_in_country <= 3;
+
+#CUSTOMER SEGMENTATION - HIGH/MEDIUM/LOW
+WITH customer_spend AS (
+    SELECT 
+        CustomerID,
+        SUM(Quantity * UnitPrice) AS total_spent
+    FROM cleaned_ecommerse_sales
+    WHERE CustomerID IS NOT NULL
+      AND Quantity > 0 AND UnitPrice > 0
+    GROUP BY CustomerID
+)
+SELECT 
+    CustomerID,
+    total_spent,
+    CASE 
+        WHEN total_spent >= 10000 THEN 'High Value'
+        WHEN total_spent >= 3000 THEN 'Medium Value'
+        ELSE 'Low Value'
+    END AS customer_segment
+FROM customer_spend;
+
+#ROLLING 3MONTH REVENUE
+WITH monthly_revenue AS (
+    SELECT 
+        DATE_FORMAT(InvoiceDate, '%Y-%m') AS month,
+        SUM(Quantity * UnitPrice) AS revenue
+    FROM cleaned_ecommerse_sales
+    WHERE Quantity > 0 AND UnitPrice > 0
+    GROUP BY month
+)
+SELECT 
+    month,
+    revenue,
+    ROUND(
+        AVG(revenue) OVER (
+            ORDER BY month
+            ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+        ), 2
+    ) AS rolling_3_month_avg
+FROM monthly_revenue;
