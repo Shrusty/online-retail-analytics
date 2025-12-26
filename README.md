@@ -1,6 +1,7 @@
 **Project Overview**
 
 This project analyzes an ecommerce transactions dataset to uncover sales trends, customer behavior, and revenue drivers.
+
 The goal is to demonstrate data analysis skills using SQL, along with clean project structure and business-focused insights.
 
 **Dataset Description**
@@ -8,12 +9,19 @@ The goal is to demonstrate data analysis skills using SQL, along with clean proj
 The dataset contains transactional-level ecommerce data with the following key fields:
 
 -InvoiceNo – Invoice identifier
+
 -StockCode – Product code
+
 -Description – Product description
+
 -Quantity – Quantity sold
+
 -InvoiceDate – Date of transaction
+
 -UnitPrice – Price per unit
+
 -CustomerID – Unique customer identifier
+
 -Country – Customer country  
 
 The data is organized into:
